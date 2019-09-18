@@ -12,40 +12,35 @@
         name: 'DuckDuckGo',
         key: '*',
         url: 'https://duckduckgo.com',
-        search: '/?q={}',
-        color: '#000'
+        search: '/?q={}'
       },
       {
         category: 'Docs',
         name: 'MDN',
         key: 'mdn',
         url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference',
-        search: '/en-US/search?q={}',
-        color: ''
+        search: '/en-US/search?q={}'
       },
       {
         category: 'Docs',
         name: 'Node.js',
         key: 'node',
         url: 'https://nodejs.org/docs/latest-v10.x/api/synopsis.html',
-        search: '/docs/latest-v10.x/api/{}.html',
-        color: ''
+        search: '/docs/latest-v10.x/api/{}.html'
       },
       {
         category: 'Docs',
         name: 'NPM',
         key: 'npm',
         url: 'https://www.npmjs.com',
-        search: '/search?q={}',
-        color: ''
+        search: '/search?q={}'
       },
       {
         category: 'Misc',
         name: 'CyberChef',
         key: 'chef',
         url: 'https://gchq.github.io/CyberChef/',
-        search: '',
-        color: ''
+        search: ''
       }
     ],
 
@@ -94,6 +89,11 @@
     colors: false,
 
     /**
+     * Change font color when input matches a command key
+     */
+    showMatch: true,
+
+    /**
      * The delimiter between a command key and your search query. For example,
      * to search GitHub for potatoes, you'd type "g:potatoes".
      */
@@ -130,8 +130,9 @@
     /* colors */
     --background: #fff;
     --foreground: #232931;
-    --searchBackground: #000;
-    --searchForeground: #fff;
+    --searchBackground: #fff;
+    --searchForeground: #232931;
+    --matchForeground: green;
 
     /* fonts */
     --font-family: Lato, sans-serif;
@@ -267,6 +268,7 @@
   }
 
   .search-input {
+    transition: color 0.2s;
     width: 100%;
     padding: 0 1rem;
     margin-bottom: 20px;
@@ -274,6 +276,10 @@
     font-weight: var(--font-weight-bold);
     letter-spacing: 0.125rem;
     text-transform: uppercase;
+  }
+
+  .search-match {
+    color: var(--matchForeground);
   }
 
   .search-suggestions {
@@ -1049,6 +1055,7 @@
       this._instantRedirect = options.instantRedirect;
       this._newTab = options.newTab;
       this._parseQuery = options.parseQuery;
+      this._showMatch = options.showMatch;
       this._suggester = options.suggester;
       this._toggleHelp = options.toggleHelp;
       this._clearPreview = this._clearPreview.bind(this);
@@ -1068,7 +1075,7 @@
       this._inputEl.value = '';
       this._inputElVal = '';
       this._suggester.suggest('');
-      this._setBackgroundFromQuery('');
+      this._setMatchFromQuery('');
     }
 
     show() {
@@ -1087,7 +1094,7 @@
       const { isKey } = this._parseQuery(newQuery);
       this._inputElVal = newQuery;
       this._suggester.suggest(newQuery);
-      this._setBackgroundFromQuery(newQuery);
+      this._setMatchFromQuery(newQuery);
       if (!newQuery || isHelp) this.hide();
       if (isHelp) this._toggleHelp();
       if (this._instantRedirect && isKey) this._submitWithValue(newQuery);
@@ -1120,7 +1127,7 @@
 
     _previewValue(value) {
       this._inputEl.value = value;
-      this._setBackgroundFromQuery(value);
+      this._setMatchFromQuery(value);
     }
 
     _redirect(redirect) {
@@ -1140,11 +1147,12 @@
       }
     }
 
-    _setBackgroundFromQuery(query) {
-      if (!this._colors) return;
-      const color = this._parseQuery(query).color;
-      if (!color) return;
-      this._formEl.style.background = color;
+    _setMatchFromQuery(query) {
+      if (!this._colors && !this._showMatch) return;
+      const command = this._parseQuery(query);
+      if (this._colors && command.color) this._formEl.style.background = color;
+      if (this._showMatch && command.isKey) this._inputEl.classList.add('search-match');
+      if (this._showMatch && !command.isKey) this._inputEl.classList.remove('search-match');
     }
 
     _submitForm(e) {
@@ -1197,6 +1205,7 @@
     instantRedirect: CONFIG.instantRedirect,
     newTab: CONFIG.newTab,
     parseQuery: queryParser.parse,
+    showMatch: CONFIG.showMatch,
     suggester,
     toggleHelp: help.toggle,
   });
