@@ -1,3 +1,11 @@
+## Changes
+
+- Added seconds to clock
+- Show help on page load instead of clock
+- Add font color change on command key match
+
+---
+
 # Tilde
 
 Inspired by [/r/startpages](https://www.reddit.com/r/startpages)—the idea is to
